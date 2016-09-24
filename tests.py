@@ -7,6 +7,7 @@ import slit_scanner
 # # from PIL import Image
 # import numpy
 # from wand.image import Image
+import time
 
 from moviepy.editor import VideoFileClip
 
@@ -14,8 +15,10 @@ from moviepy.editor import VideoFileClip
 class TestSystem(unittest.TestCase):
     def test_system(self):
 
-        test_dir = slit_scanner.make_a_glob("/Users/watson/Pictures/slitscan_2016/chicago/c142_frames/")
-        slit_scanner.moving_slitscan_width2(test_dir, 5, False, "JPEG")
+        test_dir = slit_scanner.make_a_glob("/Volumes/Peregrin/slitscan_2016/chicago/c24_hq_frames/")
+        slit_scanner.moving_slitscan(test_dir,"/Volumes/Peregrin/slitscan_2016/results-gandalf/", 10, False, "JPEG")
+
+
 
         # dir = practice.make_a_glob("/Volumes/EOS_DIGITAL/DCIM/100CANON/M07-20/")
 
