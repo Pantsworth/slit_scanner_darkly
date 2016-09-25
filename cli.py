@@ -15,7 +15,7 @@ parser.add_argument("-o", "--output_dir", default="None", help="Path for output 
 parser.add_argument("-slit", "--slit_size", default=5, type=int, help="Slit Size (optional)")
 parser.add_argument("-l", "--frame_limit", default=-1, type=int, help="Limit number of frames to specified int (optional)")
 parser.add_argument("-format", "--output_format", default="JPEG", help="Output image format. (optional)")
-parser.add_argument("-t", "--type", default=0, help="Type of slitscan to be performed. [0]=single, [1]=Moving-Horizontal, or [2]Moving-Vertical")
+parser.add_argument("-t", "--type", default="0", help="Type of slitscan to be performed. [0]=single, [1]=Moving-Horizontal, or [2]=Moving-Vertical")
 
 args = parser.parse_args()
 
@@ -31,12 +31,21 @@ if not os.path.exists(args.output_dir):
 if args.output_format != "JPEG" and args.output_format != "PNG" and args.output_format != "TIFF":
     print "Unknown output format requested. Acceptable options are: JPEG, PNG, or TIFF. Defaulting to JPEG."
     args.output_format = "JPEG"
-print args.output_format
-print args.output_dir
 
+args.type = args.type.lower()
 
-test_dir = slit_scanner.make_a_glob(args.input_dir)
-slit_scanner.moving_slitscan_width2(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
-# slit_scanner.moving_slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+if args.type == "single" or args.type == "0":
+    print "\nPerforming single slitscan."
+    test_dir = slit_scanner.make_a_glob(args.input_dir)
+    slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
 
-# slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, "JPEG")
+elif args.type == "moving-horizontal" or args.type == "1":
+    print "\nPerforming moving-horizontal slitscan"
+    test_dir = slit_scanner.make_a_glob(args.input_dir)
+    slit_scanner.moving_slitscan_width2(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+
+elif args.type == "moving-mertical" or args.type == "2":
+    print "\nPerforming moving-vertical slitscan"
+    test_dir = slit_scanner.make_a_glob(args.input_dir)
+    slit_scanner.moving_slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+
