@@ -25,13 +25,13 @@ Github doesn't let me embed YouTube vids... lame.
 https://www.youtube.com/watch?v=t-guLsCS_pg
 ### Single Slitscan (height)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 0`
-
+![Single Slitscan - Height](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-height.JPEG)
 ### Single Slitscan (width)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 1`
+![Single Slitscan - Width](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-width.JPEG)
 
 ### Moving Slitscan (height)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 2`
-
 [![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/Mm9q6qhgt7Y/0.jpg)](https://www.youtube.com/watch?v=Mm9q6qhgt7Y)
 
 https://www.youtube.com/watch?v=Mm9q6qhgt7Y
