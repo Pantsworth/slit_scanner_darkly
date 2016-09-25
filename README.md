@@ -17,5 +17,27 @@ Like the single slitscans (horizontal and vertical), but compiled over ~all~ the
 is a single slitscan from a different x or y coordinate. 
 
 
+# Examples:
+Github doesn't let me embed YouTube vids... lame.
+### Original Footage:
+[![Chicago Train Footage](https://img.youtube.com/vi/t-guLsCS_pg/0.jpg)](https://www.youtube.com/watch?v=t-guLsCS_pg)
 
+https://www.youtube.com/watch?v=t-guLsCS_pg
+### Single Slitscan (height)
+`cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 0`
 
+### Single Slitscan (width)
+`cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 1`
+
+### Moving Slitscan (height)
+`cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 2`
+
+[![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/Mm9q6qhgt7Y/0.jpg)](https://www.youtube.com/watch?v=Mm9q6qhgt7Y)
+
+https://www.youtube.com/watch?v=Mm9q6qhgt7Y
+### Moving Slitscan (width)
+`cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 3`
+
+[![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/UCeJmNJHFNI/0.jpg)](https://www.youtube.com/watch?v=UCeJmNJHFNI)
+
+https://www.youtube.com/watch?v=UCeJmNJHFNI
