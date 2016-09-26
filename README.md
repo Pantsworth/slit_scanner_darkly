@@ -4,9 +4,9 @@ Slit scanning. From frames to weird final product.
 This is a repository that allows for creating several types of slitscans.
 
 Dependencies:
-PIL http://www.pythonware.com/products/pil/
-Hickle https://github.com/telegraphic/hickle
-Numpy http://www.numpy.org/
+[PIL] (http://www.pythonware.com/products/pil/)
+[Hickle] (https://github.com/telegraphic/hickle)
+[Numpy] (http://www.numpy.org/)
 
 
 Single Slitscans:
