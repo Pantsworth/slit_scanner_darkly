@@ -17,14 +17,19 @@ is a single slitscan from a different x or y coordinate.
 
 # Usage:
 **Required Args:**
--i, --input_dir = input directory (set of video frames)
--o, --output_dir = output directory (script will create subfolder)
+Flags | Help
+------------ | -------------
+-i, --input_dir | input directory (set of video frames)
+-o, --output_dir | output directory (script will create subfolder)
 
 **Optional:**
--t, -slitscan_type = Type of slitscan to be performed. [0]=single-vertical, [1]=single-horizontal [2]=Moving-Horizontal, [3]=Moving-Vertical, [4]=Moving-Both (Vertical AND Horizontal)
--slit, --slit_size = Slit Size (default=5)
--l, --frame_limit = Limit number of frames to specified int (default = -1)
--format, --output_format = Output image format (default="JPEG")
+
+Flags | Help
+------------ | -------------
+-t, --slitscan_type | Type of slitscan to be performed. [0]=single-vertical, [1]=single-horizontal [2]=Moving-Horizontal, [3]=Moving-Vertical, [4]=Moving-Both (Vertical AND Horizontal)
+-slit, --slit_size | Slit Size (default=5)
+-l, --frame_limit | Limit number of frames to specified int (default = -1)
+-format, --output_format | Output image format (default="JPEG")
 
 
 # Examples:
