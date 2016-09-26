@@ -36,24 +36,52 @@ Flags | Help
 # Examples:
 Github doesn't let me embed YouTube vids... lame.
 ### Original Footage:
+Train Station:
 [![Chicago Train Footage](https://img.youtube.com/vi/t-guLsCS_pg/0.jpg)](https://www.youtube.com/watch?v=t-guLsCS_pg)
 
 https://www.youtube.com/watch?v=t-guLsCS_pg
+
+Bridge:
+[![Chicago Bridge Footage](https://img.youtube.com/vi/-JRnao5nn_U/0.jpg)](https://www.youtube.com/watch?v=-JRnao5nn_U)
+
+
+https://www.youtube.com/watch?v=-JRnao5nn_U
+
 ### Single Slitscan (height)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 0`
-![Single Slitscan - Height](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-height.JPEG)
+
+Train Station:
+![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-height.JPEG)
+
+Bridge:
+![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-height.JPEG)
+
+
 ### Single Slitscan (width)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 1`
-![Single Slitscan - Width](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-width.JPEG)
+![Single Slitscan - Width (Train_](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-width.JPEG)
 
 ### Moving Slitscan (height)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 2`
+Train Station:
+
 [![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/Mm9q6qhgt7Y/0.jpg)](https://www.youtube.com/watch?v=Mm9q6qhgt7Y)
 
 https://www.youtube.com/watch?v=Mm9q6qhgt7Y
+
+Bridge:
+
+[![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/e5PUNPEcwTI/0.jpg)](https://www.youtube.com/watch?v=e5PUNPEcwTI)
+
+https://www.youtube.com/watch?v=e5PUNPEcwTI
+
 ### Moving Slitscan (width)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 3`
 
 [![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/UCeJmNJHFNI/0.jpg)](https://www.youtube.com/watch?v=UCeJmNJHFNI)
 
 https://www.youtube.com/watch?v=UCeJmNJHFNI
+
+[![Chicago Bridge Footage - Slitscan Width](https://img.youtube.com/vi/3k-TRcbbit8/0.jpg)](https://www.youtube.com/watch?v=3k-TRcbbit8)
+
+https://www.youtube.com/watch?v=3k-TRcbbit8
