@@ -37,11 +37,13 @@ Flags | Help
 Github doesn't let me embed YouTube vids... lame.
 ### Original Footage:
 Train Station:
+
 [![Chicago Train Footage](https://img.youtube.com/vi/t-guLsCS_pg/0.jpg)](https://www.youtube.com/watch?v=t-guLsCS_pg)
 
 https://www.youtube.com/watch?v=t-guLsCS_pg
 
 Bridge:
+
 [![Chicago Bridge Footage](https://img.youtube.com/vi/-JRnao5nn_U/0.jpg)](https://www.youtube.com/watch?v=-JRnao5nn_U)
 
 
