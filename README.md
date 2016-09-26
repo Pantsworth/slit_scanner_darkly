@@ -9,7 +9,7 @@ This is a repository that allows for creating several types of slitscans (exampl
 [Numpy] (http://www.numpy.org/)
 
 **Single Slitscans:**
-Single slitscans come in two flavors: horizontal and vertical. This style of slitscan is inspired by Adam Magyar's (http://www.magyaradam.com/) Urban Flow project.
+Single slitscans come in two flavors: horizontal and vertical. This style of slitscan is inspired by [Adam Magyar's Urban Flow project] (http://www.magyaradam.com/).
 
 **Moving Slitscans:**
 Like the single slitscans (horizontal and vertical), but compiled over ~all~ the images in a sequence. Each new frame
