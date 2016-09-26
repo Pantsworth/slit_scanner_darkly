@@ -51,15 +51,25 @@ https://www.youtube.com/watch?v=-JRnao5nn_U
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 0`
 
 Train Station:
-![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-height.JPEG)
+
+![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-height.JPEG)
 
 Bridge:
-![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-height.JPEG)
+
+![Single Slitscan - Height (Bridge)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-height-bridge.JPEG)
 
 
 ### Single Slitscan (width)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 1`
-![Single Slitscan - Width (Train_](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/single_slitscan-width.JPEG)
+
+Train Station:
+
+![Single Slitscan - Width (Train_](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-width.JPEG)
+
+Bridge:
+
+![Single Slitscan - Width (Bridge)_](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-width-bridge.JPEG)
+
 
 ### Moving Slitscan (height)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 2`
