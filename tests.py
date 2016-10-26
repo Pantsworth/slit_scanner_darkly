@@ -15,9 +15,10 @@ from moviepy.editor import VideoFileClip
 class TestSystem(unittest.TestCase):
     def test_system(self):
 
-        test_dir = slit_scanner.make_a_glob("/Volumes/Peregrin/slitscan_2016/chicago/c24_hq_frames/")
-        slit_scanner.moving_slitscan(test_dir,"/Volumes/Peregrin/slitscan_2016/results-gandalf/", 10, False, "JPEG")
+        test_dir = slit_scanner.make_a_glob("/Volumes/Peregrin/slitscan_2016/chicago/c142_frames/")
+        # slit_scanner.moving_slitscan(test_dir,"/Volumes/Peregrin/slitscan_2016/results-gandalf/", 10, -1, "JPEG")
 
+        slit_scanner.frame_smasher(test_dir,"/Volumes/Peregrin/slitscan_2016/results-gandalf/", 10, 50, "JPEG", 0, 0)
 
 
         # dir = practice.make_a_glob("/Volumes/EOS_DIGITAL/DCIM/100CANON/M07-20/")

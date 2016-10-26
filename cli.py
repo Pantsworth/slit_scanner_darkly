@@ -37,24 +37,24 @@ args.type = args.type.lower()
 if args.type == "single-vertical" or args.type == "0":
     print "\nPerforming single slitscan (vertical)"
     test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+    slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, False)
 
 if args.type == "single-horizontal" or args.type == "1":
     print "\nPerforming single slitscan (horizontal)"
     test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.slitscan_width(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+    slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, False, True)
 
 elif args.type == "moving-horizontal" or args.type == "2":
     print "\nPerforming moving-horizontal slitscan. HORIZONTAL slices."
     test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.moving_slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, False)
 
 elif args.type == "moving-vertical" or args.type == "3":
     print "\nPerforming moving-vertical slitscan. VERTICAL slices."
     test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.moving_slitscan_width2(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, False, True)
 
 elif args.type == "moving-both" or args.type == "4":
     print "\nPerforming both moving-vertical and moving-horizontal slitscans, without having to reload everything."
     test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, True)
