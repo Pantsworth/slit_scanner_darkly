@@ -13,7 +13,7 @@ parser.add_argument("-o", "--output_dir", default="None", help="Path for output 
 parser.add_argument("-slit", "--slit_size", default=5, type=int, help="Slit Size (optional)")
 parser.add_argument("-l", "--frame_limit", default=-1, type=int, help="Limit number of frames to specified int (optional)")
 parser.add_argument("-format", "--output_format", default="JPEG", help="Output image format. (optional)")
-parser.add_argument("-t", "--type", default="0", help="Type of slitscan to be performed. [0]=single-vertical, [1]=single-horizontal [2]=Moving-Horizontal, [3]=Moving-Vertical, [4]=Moving-Both (Vertical AND Horizontal)")
+parser.add_argument("-t", "--type", default="0", help="Type of slitscan to be performed. [0]=single-vertical, [1]=single-horizontal [2]=Moving-Horizontal, [3]=Moving-Vertical, [4]=Moving-Both (Vertical AND Horizontal), [5]=Low-Memory")
 
 args = parser.parse_args()
 
@@ -56,3 +56,9 @@ elif args.type == "moving-both" or args.type == "4":
     print "\nPerforming both moving-vertical and moving-horizontal slitscans, without having to reload everything."
     test_dir = slit_scanner.make_a_glob(args.input_dir)
     slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, True)
+
+
+elif args.type == "low-mem" or args.type == "5":
+    print "\nLow-memory version. Very slow, but RAM-efficient."
+    test_dir = slit_scanner.make_a_glob(args.input_dir)
+    slit_scanner.lowmem_moving_slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)

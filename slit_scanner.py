@@ -86,6 +86,11 @@ def get_slit_fixes_width(slit_size, height, width):
     return current_slit
 
 
+def get_frame_size_bytes(dir_glob):
+    first = Image.open(dir_glob[0])
+    first_array = numpy.array(first, numpy.uint8)
+    return first_array.nbytes
+
 def make_output_dir(output_dir):
     if output_dir[len(output_dir)-1] != "/":
         output_dir = output_dir + "/"
@@ -573,9 +578,11 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
     print('\a')  # make a sound (at least on mac...)
 
 
-def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format):
+def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, ram_limit=4000000000):
     # TODO: make low memory version
     """
+    a slower but significantly more memory-efficient variant.
+
     :param dir_glob: directory for images
     :param output_dir: directory for output
     :param slit_size: size of slit to use for scanning
@@ -606,50 +613,91 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
     # LIMIT NUMBER OF FRAMES
     total_frames = get_frame_limit(limit_frames, len(dir_glob))
 
-    # *******************  make a master array with all our data *****************
-    whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
-    print "Creating master array....", total_frames, height, width, 3
+    # ***** future code for adding slitscan_array to memory considerations
+    # print "Making final slitscan frames..."
+    # final_image_size = numpy.zeros(((slit_size * total_frames), width, 3), numpy.uint8)
+    # slitscan_bytes = final_image_size.nbytes
+    # slitscan_frames = ram_limit / slitscan_bytes
+    # slitscan_array = []
+    # for frame_number in range(slitscan_frames):
+    #     slitscan_array = slitscan_array.append(numpy.zeros(((slit_size * total_frames), width, 3), numpy.uint8))
+    #
+    # for slit_position in range(height/slit_size):
+    #     img = Image.fromarray(final_image_size, 'RGB')
+    #     frame_name = frame_path + str(slit_position) + "." + output_format
+    #     # img = img.rotate(-90, expand=1)
+    #     img.save(frame_name, format=output_format)
 
-    for frame_number in xrange(total_frames):
-        next_im = Image.open(dir_glob[frame_number])
-        next_array = numpy.array(next_im, numpy.uint8)
-        del next_im
-        whole_array[frame_number, :, :, :] = next_array
-        del next_array
-        progress(frame_number, total_frames)
+    # for each video frame:
+    #   open frame
+    #   for each output frame:
+    #       open output frame
+    #       add info from opened video frame
+    #       close output frame
+    #   close video frame
 
-    # ***************** make an array of size slit*total frames. final_image_size is a single frame *****************
-    final_image_size = numpy.zeros(((slit_size*total_frames), width, 3), numpy.uint8)
+    # ***************** grab a limited number of frames, up to mem_limit worth *********
+    partial_video_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
+    video_frame_size = get_frame_size_bytes(dir_glob)
+    ram_frames = ram_limit / video_frame_size
+    remaining_frames = total_frames
+    frame_offset = 0
+    if ram_frames > total_frames:
+        ram_frames = total_frames
 
-    # now we make final_frames. array of all the final frames.
-    final_frames = []
-    for i in range(height/slit_size):
-        final_frames.append(final_image_size)
+    while remaining_frames != 0:
+        print "Ram frames: %s, Remaining Frames: %s, Frame offset: %s" % (ram_frames, remaining_frames, frame_offset)
 
-    # print "Final frame array is size: ", final_frames
-    print "\nheight/slitsize is: ", height/slit_size
-    print "Creating images..."
-    # ****for each split position:
-    #   get each frame from the whole array
-    #   grab a slit_size slit from it from split_position
-    #   stack each slit side by side into a new array
+        for video_frame in range(ram_frames):
+            next_array = numpy.array(Image.open(dir_glob[video_frame + frame_offset]), numpy.uint8)
+            partial_video_array[video_frame, :, :, :] = next_array
 
-    for slit_position in range(height/slit_size):
-        final_image_size = numpy.zeros(((slit_size * total_frames), width, 3), numpy.uint8)
-        for frame_number in range(total_frames):
-            frame_to_split = whole_array[frame_number]
-            split_result = frame_to_split[(slit_position*slit_size):(slit_position*slit_size)+slit_size, :, :]
-            final_image_size[(frame_number*slit_size):(frame_number*slit_size)+slit_size,:,:] = split_result
-        img = Image.fromarray(final_image_size, 'RGB')
-        if output_format not in "TIFF, JPEG, PNG":
-            print "No such output format. Defaulting to JPEG"
-            output_format = "JPEG"
+        for frame_number in range(ram_frames):
+            for slit_position in range(height/slit_size):
+                frame_to_split = partial_video_array[frame_number]
+                split_result = frame_to_split[(slit_position*slit_size):(slit_position*slit_size)+slit_size, :, :]
 
-        frame_name = frame_path + str(slit_position) + "." + output_format
-        img = img.rotate(-90, expand=1)
-        img.save(frame_name, format=output_format)
-        # print "saved result as ", frame_name
-        progress(slit_position, height/slit_size)
+                frame_name = frame_path + str(slit_position) + "." + output_format
+                slit_array = numpy.array(Image.open(frame_name), numpy.uint8)
+                slit_array[((frame_number+frame_offset) * slit_size):((frame_number+frame_offset) * slit_size) + slit_size, :, :] = split_result
+                slit_img = Image.fromarray(slit_array, 'RGB')
+                slit_img.save(frame_name, format=output_format)
+            progress(frame_number, total_frames)
+
+        frame_offset += ram_frames
+        remaining_frames -= ram_frames
+
+    # print "Making final slitscan frames..."
+    # final_image_size = numpy.zeros(((slit_size * total_frames), width, 3), numpy.uint8)
+    # for slit_position in range(height/slit_size):
+    #     img = Image.fromarray(final_image_size, 'RGB')
+    #     frame_name = frame_path + str(slit_position) + "." + output_format
+    #     # img = img.rotate(-90, expand=1)
+    #     img.save(frame_name, format=output_format)
+    #
+    # print "\nheight/slitsize is: ", height/slit_size
+    # print "Creating images..."
+    #
+    # for frame_number in xrange(total_frames):
+    #     next_im = Image.open(dir_glob[frame_number])
+    #     next_array = numpy.array(next_im, numpy.uint8)
+    #
+    #     for slit_position in range(height/slit_size):
+    #         print slit_position
+    #         # open final slitscan frame
+    #         frame_name = frame_path + str(slit_position) + "." + output_format
+    #         slit_image = Image.open(frame_name)
+    #         slit_array = numpy.array(slit_image)
+    #         # split the video frame
+    #         split_result = next_array[(slit_position*slit_size):(slit_position*slit_size)+slit_size, :, :]
+    #         print "split result: ", split_result.shape
+    #
+    #         slit_array[(frame_number*slit_size):(frame_number*slit_size)+slit_size, :, :] = split_result
+    #         # save slitscan frame
+    #         slit_img = Image.fromarray(slit_array, 'RGB')
+    #         # slit_img = slit_img.rotate(-90, expand=1)
+    #         slit_img.save(frame_name, format=output_format)
+    #     progress(frame_number, total_frames)
 
     print('\a')  # make a sound (at least on mac...)
 
