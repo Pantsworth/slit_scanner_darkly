@@ -1,6 +1,4 @@
 # CLI interface for working with slit_scanner.py, because GUIs r lame
-#
-# I've been listening to Car Seat Headrest lately. Check out "Fill in the Blank" sometime. If that's your thing.
 
 import argparse
 import slit_scanner
@@ -28,7 +26,7 @@ if not os.path.exists(args.input_dir):
 if not os.path.exists(args.output_dir):
     raise IOError("No such path: ", args.output_dir)
 
-if args.output_format != "JPEG" and args.output_format != "PNG" and args.output_format != "TIFF":
+if args.output_format.lower() != "jpeg" and args.output_format.lower() != "png" and args.output_format.lower() != "tiff":
     print "Unknown output format requested. Acceptable options are: JPEG, PNG, or TIFF. Defaulting to JPEG."
     args.output_format = "JPEG"
 
