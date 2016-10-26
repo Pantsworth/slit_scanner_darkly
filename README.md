@@ -53,7 +53,8 @@ https://www.youtube.com/watch?v=-JRnao5nn_U
 
 Train Station:
 
-![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-height.JPEG =400x)
+![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-height.JPEG)
+<img src="img/single_slitscan-height.JPEG" style="width: 200px;"/>
 
 Bridge:
 
