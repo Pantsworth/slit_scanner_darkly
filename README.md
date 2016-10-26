@@ -53,12 +53,9 @@ https://www.youtube.com/watch?v=-JRnao5nn_U
 
 Train Station:
 
-![Single Slitscan - Height (Train)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-height.JPEG)
 <img src="img/single_slitscan-height.JPEG" width="500px"/>
 
 Bridge:
-
-![Single Slitscan - Height (Bridge)](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-height-bridge.JPEG)
 
 <img src="img/single_slitscan-height-bridge.JPEG" width="500"/>
 
@@ -68,11 +65,11 @@ Bridge:
 
 Train Station:
 
-![Single Slitscan - Width (Train_](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-width.JPEG)
+<img src="img/single_slitscan-width.JPEG" width="500"/>
 
 Bridge:
 
-![Single Slitscan - Width (Bridge)_](https://github.com/Pantsworth/slit_scanner_darkly/raw/master/img/single_slitscan-width-bridge.JPEG)
+<img src="img/single_slitscan-width-bridge.JPEG" width="500"/>
 
 
 ### Moving Slitscan (height)
