@@ -3,6 +3,10 @@ import sys
 import random
 from PIL import Image
 # import wand
+from timeit import default_timer as timer
+from multiprocessing import Process, Pool
+# import sharedmem
+
 
 
 def make_a_glob(root_dir):
@@ -701,6 +705,258 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
 
     print('\a')  # make a sound (at least on mac...)
 
+
+def temporal_median_filter(dir_glob, output_dir, limit_frames, output_format):
+    frame_path = make_output_dir(output_dir)
+    width, height = do_sizing(dir_glob)
+    total_frames = get_frame_limit(limit_frames, len(dir_glob))
+
+    print "\n"
+
+    # for each iteration:
+    #   delete oldest frame.
+    #   add new frame
+    #   do median calculations
+    #   write to filtered_array, save result.
+
+    frame_offset = 8
+    whole_array = numpy.zeros((frame_offset+frame_offset+1, height, width, 3), numpy.uint8)
+
+    for frame_number in xrange(frame_offset+frame_offset+1):
+        next_im = Image.open(dir_glob[frame_number])
+        next_array = numpy.array(next_im, numpy.uint8)
+        del next_im
+        whole_array[frame_number, :, :, :] = next_array
+        del next_array
+        progress(frame_number, total_frames)
+
+    median_array = whole_array[0:frame_offset+frame_offset+1, :, :, :]
+
+    for frame_number in range(total_frames):
+        start = timer()
+        if frame_number == 0:
+            pass
+        elif (frame_number + frame_offset) >= total_frames:
+            median_array = median_array[1:,:,:,:]
+        else:
+            next_im = Image.open(dir_glob[frame_offset+frame_offset+frame_number])
+            next_array = numpy.array(next_im, numpy.uint8)
+            median_array = numpy.roll(median_array, -1, axis=0)
+            median_array[frame_offset+frame_offset, :, :, :] = next_array
+
+        # low = frame_number - frame_offset
+        # high = frame_number + frame_offset
+        # if frame_number-frame_offset <= 0:
+        #     low = 0
+        # if frame_number+frame_offset+frame_offset >= total_frames:
+        #     high = total_frames
+        #
+        # print low, high
+        filtered_array = numpy.zeros((height, width, 3), numpy.uint8)
+
+        start2 = timer()
+        filtered_array[:, :, 0] = numpy.median(median_array[:,:,:,0], axis=0)
+        filtered_array[:, :, 1] = numpy.median(median_array[:,:,:,1], axis=0)
+        filtered_array[:, :, 2] = numpy.median(median_array[:,:,:,2], axis=0)
+        end2 = timer()
+        print "Median array calc: %s" % (end2-start2)
+
+        # for xcord in range(width-1):
+        #     # pool.map(multi_run_wrapper(), [()])
+        #     for ycord in range(height-1):
+                # median_list = median_array[:, ycord, xcord, :]
+                # # separate RGB channels, find median for each
+                # median_r = [rgb[0] for rgb in median_list]
+                # median_g = [rgb[1] for rgb in median_list]
+                # median_b = [rgb[2] for rgb in median_list]
+
+                # filtered_array[ycord, xcord, 0] = quickselect.qselect(median_r, (len(median_r) / 2))
+                # filtered_array[ycord, xcord, 1] = quickselect.qselect(median_g, (len(median_g) / 2))
+                # filtered_array[ycord, xcord, 2] = quickselect.qselect(median_b, (len(median_b) / 2))
+                #
+                #
+                # filtered_array[ycord, xcord, 0] = median_result_r[ycord, xcord]
+                # filtered_array[ycord, xcord, 1] = median_result_g[ycord, xcord]
+                # filtered_array[ycord, xcord, 2] = median_result_b[ycord, xcord]
+                # print filtered_array[ycord, xcord, 0]
+                # result = numpy.median(median_array[:, :, :, 0], axis=0)
+                # print result[ycord, xcord]
+                #
+                # print filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2]
+                # filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2] = pool.map(multi_run_wrapper, [(median_r, (len(median_r) / 2)), (median_g, (len(median_g) / 2)), (median_b, (len(median_b) / 2))])
+                # print results
+
+            # end2 = timer()
+            # print "Quickselect time is: %s s" % (end2-start2)
+            # progress(xcord, width-1)
+
+        img = Image.fromarray(filtered_array)
+        frame_name = frame_path + str(frame_number) + "." + output_format
+        img.save(frame_name, format=output_format)
+        progress(frame_number, total_frames)
+        end = timer()
+        print "Time required: %s seconds" % (end-start)
+
+
+def temporal_median_filter_multi(dir_glob, output_dir, limit_frames, output_format):
+    frame_path = make_output_dir(output_dir)
+    width, height = do_sizing(dir_glob)
+    total_frames = get_frame_limit(limit_frames, len(dir_glob))
+
+    print "\n"
+
+    # whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
+    #
+    # for frame_number in xrange(frame_offset+frame_offset+1):
+    #     next_im = Image.open(dir_glob[frame_number])
+    #     next_array = numpy.array(next_im, numpy.uint8)
+    #     del next_im
+    #     whole_array[frame_number, :, :, :] = next_array
+    #     del next_array
+    #     progress(frame_number, total_frames)
+
+
+
+    frame_offset = 8
+    simultaneous_frames = 8
+    median_array = numpy.zeros((frame_offset+frame_offset+simultaneous_frames, height, width, 3), numpy.uint8)
+
+    for frame_number in xrange(frame_offset+frame_offset+simultaneous_frames):
+        next_im = Image.open(dir_glob[frame_number])
+        next_array = numpy.array(next_im, numpy.uint8)
+        del next_im
+        median_array[frame_number, :, :, :] = next_array
+        del next_array
+    # read in 8 frames at a time, do processing, read in 8 more.
+
+    p = Pool(processes=8)
+    current_frame = 0
+    filtered_array = numpy.zeros((simultaneous_frames, height, width, 3), numpy.uint8)
+
+    while (current_frame < total_frames):
+        start = timer()
+
+        if current_frame == 0:
+            pass
+        elif (current_frame + frame_offset + simultaneous_frames) >= total_frames:
+            pass
+        else:
+            median_array = numpy.roll(median_array, -8, axis=0)
+            for x in range(simultaneous_frames):
+                if (x+current_frame+frame_offset+frame_offset) > total_frames:
+                    next_array = numpy.zeros((height, width, 3), numpy.uint8)
+                else:
+                    next_im = Image.open(dir_glob[frame_offset+frame_offset+current_frame+x])
+                    next_array = numpy.array(next_im, numpy.uint8)
+                median_array[frame_offset+frame_offset+x, :, :, :] = next_array
+
+
+        slice_list = []
+        for x in range(simultaneous_frames):
+            if (current_frame + frame_offset + x + frame_offset) > total_frames:
+                slice_list.append(median_array[x:(frame_offset+frame_offset+x-1), :, :, :])
+                print "Median slice: ", x, ":", frame_offset+frame_offset+x-1
+
+
+            else:
+                slice_list.append(median_array[x:(frame_offset+frame_offset+x), :, :, :])
+                print "Median slice: ", x, ":", frame_offset+frame_offset+x
+        results = p.map(median_calc, slice_list)
+
+        for frame in range(len(results)):
+            filtered_array[frame, :, :, 0] = results[frame][0]
+            filtered_array[frame, :, :, 1] = results[frame][1]
+            filtered_array[frame, :, :, 2] = results[frame][2]
+            img = Image.fromarray(filtered_array[frame, :, :, :])
+            frame_name = frame_path + str(current_frame+frame) + "." + output_format
+            img.save(frame_name, format=output_format)
+        progress(current_frame, total_frames)
+        end = timer()
+        print "Time required: %s seconds" % (end-start)
+        current_frame += simultaneous_frames
+
+    #
+    # for frame_number in xrange(frame_offset+frame_offset+1):
+    #     next_im = Image.open(dir_glob[frame_number])
+    #     next_array = numpy.array(next_im, numpy.uint8)
+    #     del next_im
+    #     whole_array[frame_number, :, :, :] = next_array
+    #     del next_array
+    #     progress(frame_number, total_frames)
+    #
+    # median_array = whole_array[0:frame_offset+frame_offset+1, :, :, :]
+    #
+    # for frame_number in range(total_frames):
+    #     start = timer()
+    #     if frame_number == 0:
+    #         pass
+    #     elif (frame_number + frame_offset) >= total_frames:
+    #         median_array = median_array[1:,:,:,:]
+    #     else:
+    #         next_im = Image.open(dir_glob[frame_offset+frame_offset+frame_number])
+    #         next_array = numpy.array(next_im, numpy.uint8)
+    #         median_array = numpy.roll(median_array, -1, axis=0)
+    #         median_array[frame_offset+frame_offset, :, :, :] = next_array
+    #
+    #     # low = frame_number - frame_offset
+    #     # high = frame_number + frame_offset
+    #     # if frame_number-frame_offset <= 0:
+    #     #     low = 0
+    #     # if frame_number+frame_offset+frame_offset >= total_frames:
+    #     #     high = total_frames
+    #     #
+    #     # print low, high
+    #     filtered_array = numpy.zeros((height, width, 3), numpy.uint8)
+    #
+    #     start2 = timer()
+    #     filtered_array[:, :, 0] = numpy.median(median_array[:,:,:,0], axis=0)
+    #     filtered_array[:, :, 1] = numpy.median(median_array[:,:,:,1], axis=0)
+    #     filtered_array[:, :, 2] = numpy.median(median_array[:,:,:,2], axis=0)
+    #     end2 = timer()
+    #     print "Median array calc: %s" % (end2-start2)
+    #
+    #     # for xcord in range(width-1):
+    #     #     # pool.map(multi_run_wrapper(), [()])
+    #     #     for ycord in range(height-1):
+    #             # median_list = median_array[:, ycord, xcord, :]
+    #             # # separate RGB channels, find median for each
+    #             # median_r = [rgb[0] for rgb in median_list]
+    #             # median_g = [rgb[1] for rgb in median_list]
+    #             # median_b = [rgb[2] for rgb in median_list]
+    #
+    #             # filtered_array[ycord, xcord, 0] = quickselect.qselect(median_r, (len(median_r) / 2))
+    #             # filtered_array[ycord, xcord, 1] = quickselect.qselect(median_g, (len(median_g) / 2))
+    #             # filtered_array[ycord, xcord, 2] = quickselect.qselect(median_b, (len(median_b) / 2))
+    #             #
+    #             #
+    #             # filtered_array[ycord, xcord, 0] = median_result_r[ycord, xcord]
+    #             # filtered_array[ycord, xcord, 1] = median_result_g[ycord, xcord]
+    #             # filtered_array[ycord, xcord, 2] = median_result_b[ycord, xcord]
+    #             # print filtered_array[ycord, xcord, 0]
+    #             # result = numpy.median(median_array[:, :, :, 0], axis=0)
+    #             # print result[ycord, xcord]
+    #             #
+    #             # print filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2]
+    #             # filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2] = pool.map(multi_run_wrapper, [(median_r, (len(median_r) / 2)), (median_g, (len(median_g) / 2)), (median_b, (len(median_b) / 2))])
+    #             # print results
+    #
+    #         # end2 = timer()
+    #         # print "Quickselect time is: %s s" % (end2-start2)
+    #         # progress(xcord, width-1)
+    #
+    #     img = Image.fromarray(filtered_array)
+    #     frame_name = frame_path + str(frame_number) + "." + output_format
+    #     img.save(frame_name, format=output_format)
+    #     progress(frame_number, total_frames)
+    #     end = timer()
+    #     print "Time required: %s seconds" % (end-start)
+
+
+def median_calc(median_array):
+    return numpy.median(median_array[:,:,:,0], axis=0), numpy.median(median_array[:,:,:,1], axis=0), numpy.median(median_array[:,:,:,2], axis=0)
+
+def multi_run_wrapper(args):
+    return median_calc(*args)
 
 def make_a_video(output_dir, output_format, name):
     os.system('ffmpeg -r 24 -i ' + output_dir + '%d.' + output_format + ' -c:v libx264 ' + name)
