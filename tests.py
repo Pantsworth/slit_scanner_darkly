@@ -2,24 +2,25 @@ __author__ = 'Michael Nowakowski'
 
 import unittest, os
 import slit_scanner
-# from rawkit.raw import Raw
-# from rawkit.options import WhiteBalance
-# # from PIL import Image
-# import numpy
-# from wand.image import Image
 import time
 
 from moviepy.editor import VideoFileClip
 
 
 class TestSystem(unittest.TestCase):
-    def test_system(self):
+    def test_globbing(self):
+        find_jpegs = slit_scanner.make_a_glob("./img/")
+        test_result = "['./img/single_slitscan-height-bridge.JPEG', './img/single_slitscan-height.JPEG', './img/single_slitscan-width-bridge.JPEG', './img/single_slitscan-width.JPEG']"
+        self.assertEqual(str(find_jpegs), test_result)
 
+    def test_system(self):
+        pass
         # test_dir = slit_scanner.make_a_glob("/Volumes/Peregrin/slitscan_2016/chicago/c142_frames/")
         # slit_scanner.moving_slitscan(test_dir,"/Volumes/Peregrin/slitscan_2016/results-gandalf/", 10, -1, "JPEG")
-
-        test_dir2 = slit_scanner.make_a_glob("/Volumes/Peregrin/slitscan_2016/inputs/saigon1")
-        slit_scanner.temporal_median_filter_multi(test_dir2, "/Volumes/Peregrin/slitscan_2016/results-gandalf/", 200, "JPEG",)
+        #
+        # test_dir2 = slit_scanner.make_a_glob("/Volumes/Peregrin/slitscan_2016/inputs/earth")
+        # # slit_scanner.temporal_median_filter_multi2(test_dir2, "/Volumes/Peregrin/slitscan_2016/results-gandalf/", 100, "JPEG",)
+        # slit_scanner.conventional_slitscan(test_dir2, "/Volumes/Peregrin/slitscan_2016/results-gandalf/", 600, "JPEG",)
 
 
         # dir = practice.make_a_glob("/Volumes/EOS_DIGITAL/DCIM/100CANON/M07-20/")

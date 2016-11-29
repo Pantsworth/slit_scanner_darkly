@@ -2,49 +2,47 @@ import numpy, os, glob
 import sys
 import random
 from PIL import Image
-# import wand
 from timeit import default_timer as timer
 from multiprocessing import Process, Pool
-# import sharedmem
-
 
 
 def make_a_glob(root_dir):
     """
-    make directories that work
-    :param root_dir: directory for images
-    :return: glob of images for future use
+    Creates a glob of images from specified path. Checks for JPEG, PNG, TIFF, DNG
+    :param root_dir: path to set of images
+    :return: glob of images from input path
     """
     if not os.path.exists(root_dir):
-        print "No such path. ", root_dir
+        raise IOError("No such path: %s" % root_dir)
 
-    print "Path is: ", root_dir
-
-    if root_dir[len(root_dir)-1] != "/":
-        root_dir = root_dir + "/"
+    if not root_dir.endswith("/"):
+        root_dir += "/"
 
     dir_glob = glob.glob(root_dir + "*.tif")
-    # print dir_glob
+    extension_list = ["*.tiff", "*.tif", "*.jpeg", "*.png", "*.jpg", "*.dng"]
 
-    if len(dir_glob) == 0:
-        print "tif files not found... trying dng and jpg"
-        dir_glob = glob.glob(root_dir + "*.tiff")
-        # print dir_glob
-        if len(dir_glob) == 0:      # try dng files
-            dir_glob = glob.glob(root_dir + "*.dng")
-            if len(dir_glob) == 0:      # try jpg files
-                dir_glob = glob.glob(root_dir + "*.jpg")
-                if len(dir_glob) == 0:  # try jpg files
-                    dir_glob = glob.glob(root_dir + "*.jpeg")
-                    if len(dir_glob) == 0:
-                        dir_glob = glob.glob(root_dir + "*.PNG")
+    for ext in extension_list:
+        if len(dir_glob) == 0:
+            dir_glob = glob.glob(root_dir + ext)
+            if len(dir_glob) == 0:
+                dir_glob = glob.glob(root_dir + ext.upper())
+            if ext == extension_list[(len(extension_list) - 1)] and len(dir_glob) == 0:
+                raise IOError("No images found in directory: %s" % root_dir)
+        else:
+            break
 
-    print "number of frames: ", len(dir_glob)
-    print "first image is " + dir_glob[0]
+    print "First image is: " + dir_glob[0]
+    print "Number of frames found: ", len(dir_glob)
     return dir_glob
 
 
 def get_frame_limit(limit_frames, globsize):
+    """
+    Determines a limit on the number of frames
+    :param limit_frames:
+    :param globsize:
+    :return:
+    """
     if limit_frames != -1:
         if globsize > limit_frames:
             total_frames = limit_frames
@@ -95,7 +93,13 @@ def get_frame_size_bytes(dir_glob):
     first_array = numpy.array(first, numpy.uint8)
     return first_array.nbytes
 
+
 def make_output_dir(output_dir):
+    """
+    Creates uniquely-named new folder along specified path
+    :param output_dir: output path
+    :return: path to new folder
+    """
     if output_dir[len(output_dir)-1] != "/":
         output_dir = output_dir + "/"
 
@@ -296,6 +300,12 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
     |_____|_____________________________|
           x =>
         (slit position)
+
+    # ****for each split position:
+    #   get each frame from the whole array
+    #   grab a slit_size slit from it from split_position
+    #   stack each slit side by side into a new array
+
     """
     frame_path = make_output_dir(output_dir)
 
@@ -317,16 +327,15 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
         del next_array
         progress(frame_number, total_frames)
 
-    # ****for each split position:
-    #   get each frame from the whole array
-    #   grab a slit_size slit from it from split_position
-    #   stack each slit side by side into a new array
-
     print "\nCreating images..."
 
     if not do_height and not do_width:
         print "Neither height nor width selected. Doing moving height slitscan anyway."
         do_height = True
+
+    if output_format.upper() not in "TIFF, JPEG, PNG":
+        print "No such output format. Defaulting to JPEG"
+        output_format = "JPEG"
 
     if do_height:
         print "\nheight/slitsize is: ", height / slit_size
@@ -339,10 +348,6 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
                 split_result = frame_to_split[(slit_position*slit_size):(slit_position*slit_size)+slit_size, :, :]
                 final_image_size[(frame_number*slit_size):(frame_number*slit_size)+slit_size,:,:] = split_result
             img = Image.fromarray(final_image_size, 'RGB')
-            if output_format not in "TIFF, JPEG, PNG":
-                print "No such output format. Defaulting to JPEG"
-                output_format = "JPEG"
-
             frame_name = frame_path + "height/" + str(slit_position) + "." + output_format
             img = img.rotate(-90, expand=1)
             img.save(frame_name, format=output_format)
@@ -359,15 +364,11 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
                 split_result = frame_to_split[:, (slit_position*slit_size):(slit_position*slit_size)+slit_size, :]
                 final_image_size[:,(frame_number*slit_size):(frame_number*slit_size)+slit_size,:] = split_result
             img = Image.fromarray(final_image_size, 'RGB')
-            if output_format not in "TIFF, JPEG, PNG":
-                print "No such output format. Defaulting to JPEG"
-                output_format = "JPEG"
-
             frame_name = frame_path + "width/" + str(slit_position) + "." + output_format
             img.save(frame_name, format=output_format)
             progress(slit_position, width/slit_size)
-
         print('\a')  # make a sound (at least on mac...)
+    return frame_path
 
 
 def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, framesmash_width, framesmash_height):
@@ -414,7 +415,6 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
                 dividing_list_width[len(dividing_list_width)-1] -= (dividing_line-height)
         print "Dividing list-width: ", dividing_list_width
 
-
     # **************************** FRAMESMASHER - HEIGHT *******************************************************
     if framesmash_height:
         os.mkdir(frame_path + "height/")
@@ -427,7 +427,6 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
             if dividing_line > width:
                 dividing_list_height[len(dividing_list_height) - 1] -= (dividing_line - width)
         print "Dividing list-height: ", dividing_list_height
-
 
         # **************************** FRAMESMASHER - RANDOM *******************************************************
     if framesmash_irregular or framesmash_space:
@@ -579,7 +578,8 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
             final_img.save(frame_name, format=output_format)
             progress(frame, total_frames)
 
-    print('\a')  # make a sound (at least on mac...)
+    print('\a')
+    return frame_path
 
 
 def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, ram_limit=4000000000):
@@ -704,25 +704,23 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
     #     progress(frame_number, total_frames)
 
     print('\a')  # make a sound (at least on mac...)
+    return frame_path
 
 
-def temporal_median_filter(dir_glob, output_dir, limit_frames, output_format):
+def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
     frame_path = make_output_dir(output_dir)
+
+    # **************************** figure out sizing *******************************************************
     width, height = do_sizing(dir_glob)
+
+    # ******************************** LIMIT NUMBER OF FRAMES ********************************
     total_frames = get_frame_limit(limit_frames, len(dir_glob))
 
-    print "\n"
+    # *******************  make a master array with all our data *****************
+    whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
+    print "Creating master array....", total_frames, height, width, 3
 
-    # for each iteration:
-    #   delete oldest frame.
-    #   add new frame
-    #   do median calculations
-    #   write to filtered_array, save result.
-
-    frame_offset = 8
-    whole_array = numpy.zeros((frame_offset+frame_offset+1, height, width, 3), numpy.uint8)
-
-    for frame_number in xrange(frame_offset+frame_offset+1):
+    for frame_number in xrange(total_frames):
         next_im = Image.open(dir_glob[frame_number])
         next_array = numpy.array(next_im, numpy.uint8)
         del next_im
@@ -730,236 +728,56 @@ def temporal_median_filter(dir_glob, output_dir, limit_frames, output_format):
         del next_array
         progress(frame_number, total_frames)
 
-    median_array = whole_array[0:frame_offset+frame_offset+1, :, :, :]
-
-    for frame_number in range(total_frames):
-        start = timer()
-        if frame_number == 0:
-            pass
-        elif (frame_number + frame_offset) >= total_frames:
-            median_array = median_array[1:,:,:,:]
-        else:
-            next_im = Image.open(dir_glob[frame_offset+frame_offset+frame_number])
-            next_array = numpy.array(next_im, numpy.uint8)
-            median_array = numpy.roll(median_array, -1, axis=0)
-            median_array[frame_offset+frame_offset, :, :, :] = next_array
-
-        # low = frame_number - frame_offset
-        # high = frame_number + frame_offset
-        # if frame_number-frame_offset <= 0:
-        #     low = 0
-        # if frame_number+frame_offset+frame_offset >= total_frames:
-        #     high = total_frames
-        #
-        # print low, high
-        filtered_array = numpy.zeros((height, width, 3), numpy.uint8)
-
-        start2 = timer()
-        filtered_array[:, :, 0] = numpy.median(median_array[:,:,:,0], axis=0)
-        filtered_array[:, :, 1] = numpy.median(median_array[:,:,:,1], axis=0)
-        filtered_array[:, :, 2] = numpy.median(median_array[:,:,:,2], axis=0)
-        end2 = timer()
-        print "Median array calc: %s" % (end2-start2)
-
-        # for xcord in range(width-1):
-        #     # pool.map(multi_run_wrapper(), [()])
-        #     for ycord in range(height-1):
-                # median_list = median_array[:, ycord, xcord, :]
-                # # separate RGB channels, find median for each
-                # median_r = [rgb[0] for rgb in median_list]
-                # median_g = [rgb[1] for rgb in median_list]
-                # median_b = [rgb[2] for rgb in median_list]
-
-                # filtered_array[ycord, xcord, 0] = quickselect.qselect(median_r, (len(median_r) / 2))
-                # filtered_array[ycord, xcord, 1] = quickselect.qselect(median_g, (len(median_g) / 2))
-                # filtered_array[ycord, xcord, 2] = quickselect.qselect(median_b, (len(median_b) / 2))
-                #
-                #
-                # filtered_array[ycord, xcord, 0] = median_result_r[ycord, xcord]
-                # filtered_array[ycord, xcord, 1] = median_result_g[ycord, xcord]
-                # filtered_array[ycord, xcord, 2] = median_result_b[ycord, xcord]
-                # print filtered_array[ycord, xcord, 0]
-                # result = numpy.median(median_array[:, :, :, 0], axis=0)
-                # print result[ycord, xcord]
-                #
-                # print filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2]
-                # filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2] = pool.map(multi_run_wrapper, [(median_r, (len(median_r) / 2)), (median_g, (len(median_g) / 2)), (median_b, (len(median_b) / 2))])
-                # print results
-
-            # end2 = timer()
-            # print "Quickselect time is: %s s" % (end2-start2)
-            # progress(xcord, width-1)
-
-        img = Image.fromarray(filtered_array)
-        frame_name = frame_path + str(frame_number) + "." + output_format
-        img.save(frame_name, format=output_format)
-        progress(frame_number, total_frames)
-        end = timer()
-        print "Time required: %s seconds" % (end-start)
+    current_step = 0
+    step = height/255
+    current_time = 255
+    # for line in range(height/step):
+    #     whole_array[:, current_step:current_step+step, :, :] = numpy.roll(whole_array[:, current_step:current_step+step, :, :], current_time, axis=0)
+    #     current_step += step
+    #     current_time -= 1
+    #     print current_step, current_time
 
 
-def temporal_median_filter_multi(dir_glob, output_dir, limit_frames, output_format):
-    frame_path = make_output_dir(output_dir)
-    width, height = do_sizing(dir_glob)
-    total_frames = get_frame_limit(limit_frames, len(dir_glob))
-
-    print "\n"
-
-    # whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
-    #
-    # for frame_number in xrange(frame_offset+frame_offset+1):
-    #     next_im = Image.open(dir_glob[frame_number])
-    #     next_array = numpy.array(next_im, numpy.uint8)
-    #     del next_im
-    #     whole_array[frame_number, :, :, :] = next_array
-    #     del next_array
-    #     progress(frame_number, total_frames)
-
-
-
-    frame_offset = 8
-    simultaneous_frames = 8
-    median_array = numpy.zeros((frame_offset+frame_offset+simultaneous_frames, height, width, 3), numpy.uint8)
-
-    for frame_number in xrange(frame_offset+frame_offset+simultaneous_frames):
-        next_im = Image.open(dir_glob[frame_number])
-        next_array = numpy.array(next_im, numpy.uint8)
-        del next_im
-        median_array[frame_number, :, :, :] = next_array
-        del next_array
-    # read in 8 frames at a time, do processing, read in 8 more.
-
-    p = Pool(processes=8)
-    current_frame = 0
-    filtered_array = numpy.zeros((simultaneous_frames, height, width, 3), numpy.uint8)
-
-    while (current_frame < total_frames):
-        start = timer()
-
-        if current_frame == 0:
-            pass
-        elif (current_frame + frame_offset + simultaneous_frames) >= total_frames:
-            pass
-        else:
-            median_array = numpy.roll(median_array, -8, axis=0)
-            for x in range(simultaneous_frames):
-                if (x+current_frame+frame_offset+frame_offset) > total_frames:
-                    next_array = numpy.zeros((height, width, 3), numpy.uint8)
-                else:
-                    next_im = Image.open(dir_glob[frame_offset+frame_offset+current_frame+x])
-                    next_array = numpy.array(next_im, numpy.uint8)
-                median_array[frame_offset+frame_offset+x, :, :, :] = next_array
-
-
-        slice_list = []
-        for x in range(simultaneous_frames):
-            if (current_frame + frame_offset + x + frame_offset) > total_frames:
-                slice_list.append(median_array[x:(frame_offset+frame_offset+x-1), :, :, :])
-                print "Median slice: ", x, ":", frame_offset+frame_offset+x-1
-
-
-            else:
-                slice_list.append(median_array[x:(frame_offset+frame_offset+x), :, :, :])
-                print "Median slice: ", x, ":", frame_offset+frame_offset+x
-        results = p.map(median_calc, slice_list)
-
-        for frame in range(len(results)):
-            filtered_array[frame, :, :, 0] = results[frame][0]
-            filtered_array[frame, :, :, 1] = results[frame][1]
-            filtered_array[frame, :, :, 2] = results[frame][2]
-            img = Image.fromarray(filtered_array[frame, :, :, :])
-            frame_name = frame_path + str(current_frame+frame) + "." + output_format
-            img.save(frame_name, format=output_format)
-        progress(current_frame, total_frames)
-        end = timer()
-        print "Time required: %s seconds" % (end-start)
-        current_frame += simultaneous_frames
-
-    #
-    # for frame_number in xrange(frame_offset+frame_offset+1):
-    #     next_im = Image.open(dir_glob[frame_number])
-    #     next_array = numpy.array(next_im, numpy.uint8)
-    #     del next_im
-    #     whole_array[frame_number, :, :, :] = next_array
-    #     del next_array
-    #     progress(frame_number, total_frames)
-    #
-    # median_array = whole_array[0:frame_offset+frame_offset+1, :, :, :]
-    #
-    # for frame_number in range(total_frames):
-    #     start = timer()
-    #     if frame_number == 0:
-    #         pass
-    #     elif (frame_number + frame_offset) >= total_frames:
-    #         median_array = median_array[1:,:,:,:]
+    # for line in range(height/step):
+    #     whole_array[:, current_step:current_step+step, :, :] = numpy.roll(whole_array[:, current_step:current_step+step, :, :], current_time, axis=0)
+    #     current_step += step
+    #     if line < (height/step)/2:
+    #         current_time -= 1
     #     else:
-    #         next_im = Image.open(dir_glob[frame_offset+frame_offset+frame_number])
-    #         next_array = numpy.array(next_im, numpy.uint8)
-    #         median_array = numpy.roll(median_array, -1, axis=0)
-    #         median_array[frame_offset+frame_offset, :, :, :] = next_array
-    #
-    #     # low = frame_number - frame_offset
-    #     # high = frame_number + frame_offset
-    #     # if frame_number-frame_offset <= 0:
-    #     #     low = 0
-    #     # if frame_number+frame_offset+frame_offset >= total_frames:
-    #     #     high = total_frames
-    #     #
-    #     # print low, high
-    #     filtered_array = numpy.zeros((height, width, 3), numpy.uint8)
-    #
-    #     start2 = timer()
-    #     filtered_array[:, :, 0] = numpy.median(median_array[:,:,:,0], axis=0)
-    #     filtered_array[:, :, 1] = numpy.median(median_array[:,:,:,1], axis=0)
-    #     filtered_array[:, :, 2] = numpy.median(median_array[:,:,:,2], axis=0)
-    #     end2 = timer()
-    #     print "Median array calc: %s" % (end2-start2)
-    #
-    #     # for xcord in range(width-1):
-    #     #     # pool.map(multi_run_wrapper(), [()])
-    #     #     for ycord in range(height-1):
-    #             # median_list = median_array[:, ycord, xcord, :]
-    #             # # separate RGB channels, find median for each
-    #             # median_r = [rgb[0] for rgb in median_list]
-    #             # median_g = [rgb[1] for rgb in median_list]
-    #             # median_b = [rgb[2] for rgb in median_list]
-    #
-    #             # filtered_array[ycord, xcord, 0] = quickselect.qselect(median_r, (len(median_r) / 2))
-    #             # filtered_array[ycord, xcord, 1] = quickselect.qselect(median_g, (len(median_g) / 2))
-    #             # filtered_array[ycord, xcord, 2] = quickselect.qselect(median_b, (len(median_b) / 2))
-    #             #
-    #             #
-    #             # filtered_array[ycord, xcord, 0] = median_result_r[ycord, xcord]
-    #             # filtered_array[ycord, xcord, 1] = median_result_g[ycord, xcord]
-    #             # filtered_array[ycord, xcord, 2] = median_result_b[ycord, xcord]
-    #             # print filtered_array[ycord, xcord, 0]
-    #             # result = numpy.median(median_array[:, :, :, 0], axis=0)
-    #             # print result[ycord, xcord]
-    #             #
-    #             # print filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2]
-    #             # filtered_array[ycord, xcord, 0], filtered_array[ycord, xcord, 1], filtered_array[ycord, xcord, 2] = pool.map(multi_run_wrapper, [(median_r, (len(median_r) / 2)), (median_g, (len(median_g) / 2)), (median_b, (len(median_b) / 2))])
-    #             # print results
-    #
-    #         # end2 = timer()
-    #         # print "Quickselect time is: %s s" % (end2-start2)
-    #         # progress(xcord, width-1)
-    #
-    #     img = Image.fromarray(filtered_array)
-    #     frame_name = frame_path + str(frame_number) + "." + output_format
-    #     img.save(frame_name, format=output_format)
-    #     progress(frame_number, total_frames)
-    #     end = timer()
-    #     print "Time required: %s seconds" % (end-start)
+    #         current_time +=1
+    #     print current_step, current_time
 
+    # step = width/255
+    # for line in range(width):
+    #     whole_array[:, :, current_step:current_step+step, :] = numpy.roll(whole_array[:, :, current_step:current_step+step, :], current_time, axis=0)
+    #     current_step += 1
+    #     if line < (width/2):
+    #         current_time -=1
+    #     else:
+    #         current_time +=1
+    #     print current_step, current_time
 
-def median_calc(median_array):
-    return numpy.median(median_array[:,:,:,0], axis=0), numpy.median(median_array[:,:,:,1], axis=0), numpy.median(median_array[:,:,:,2], axis=0)
+    # CIRCULAR SLITSCAN
+    center = [height/2, width/2]
+    for xcord in range(width):
+        for ycord in range(height):
+            current_time = int(((((center[0]-ycord)**2)+((center[1]-xcord)**2)) ** 0.5))
+            # current_time = int((((((center[0]-ycord)**2)+((center[1]-xcord)**2))) / (width**2 + height**2)))
+            whole_array[:, ycord, xcord, :] = numpy.roll(whole_array[:, ycord, xcord, :], current_time, axis=0)
 
-def multi_run_wrapper(args):
-    return median_calc(*args)
+    for frame in range(total_frames):
+        img = whole_array[frame]
+        # print "IMG dimensions: ", img
+        final_img = Image.fromarray(img, 'RGB')
+        frame_name = frame_path + str(frame) + "." + output_format
+        final_img.save(frame_name, format=output_format)
+        progress(frame, total_frames)
+
 
 def make_a_video(output_dir, output_format, name):
-    os.system('ffmpeg -r 24 -i ' + output_dir + '%d.' + output_format + ' -c:v libx264 ' + name)
+    if not output_dir.endswith("/"):
+        output_dir += "/"
+    os.system('ffmpeg -r 24 -i ' + output_dir + '%d.' + output_format + ' -c:v libx264 ' + output_dir + name)
     #   ffmpeg finishing
     #   ffmpeg -framerate 24 -i %d.JPEG -c:v libx264  out7.mp4
     #   ffmpeg -framerate 24 -i %d.JPEG -c:v libx264 -s 1920x1200 out7.mp4

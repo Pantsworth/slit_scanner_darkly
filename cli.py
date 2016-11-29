@@ -14,6 +14,7 @@ parser.add_argument("-slit", "--slit_size", default=5, type=int, help="Slit Size
 parser.add_argument("-l", "--frame_limit", default=-1, type=int, help="Limit number of frames to specified int (optional)")
 parser.add_argument("-format", "--output_format", default="JPEG", help="Output image format. (optional)")
 parser.add_argument("-t", "--type", default="0", help="Type of slitscan to be performed. [0]=single-vertical, [1]=single-horizontal [2]=Moving-Horizontal, [3]=Moving-Vertical, [4]=Moving-Both (Vertical AND Horizontal), [5]=Low-Memory")
+parser.add_argument("-v", "--video", default=0, help="Optional: Encode h.264 video of resulting frames (0 or 1. Default is 0)")
 
 args = parser.parse_args()
 
@@ -26,39 +27,53 @@ if not os.path.exists(args.input_dir):
 if not os.path.exists(args.output_dir):
     raise IOError("No such path: ", args.output_dir)
 
-if args.output_format.lower() != "jpeg" and args.output_format.lower() != "png" and args.output_format.lower() != "tiff":
+acceptable_formats = ["jpeg", "png", "tiff"]
+if args.output_format.lower() not in acceptable_formats:
     print "Unknown output format requested. Acceptable options are: JPEG, PNG, or TIFF. Defaulting to JPEG."
     args.output_format = "JPEG"
 
+
 args.type = args.type.lower()
+test_dir = slit_scanner.make_a_glob(args.input_dir)
+out_path = None
 
 if args.type == "single-vertical" or args.type == "0":
     print "\nPerforming single slitscan (vertical)"
-    test_dir = slit_scanner.make_a_glob(args.input_dir)
     slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, False)
 
 if args.type == "single-horizontal" or args.type == "1":
     print "\nPerforming single slitscan (horizontal)"
-    test_dir = slit_scanner.make_a_glob(args.input_dir)
     slit_scanner.slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, False, True)
 
 elif args.type == "moving-horizontal" or args.type == "2":
     print "\nPerforming moving-horizontal slitscan. HORIZONTAL slices."
-    test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, False)
+    out_path = slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, do_height=True, do_width=False)
 
 elif args.type == "moving-vertical" or args.type == "3":
     print "\nPerforming moving-vertical slitscan. VERTICAL slices."
-    test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, False, True)
+    out_path = slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, do_height=False, do_width=True)
 
 elif args.type == "moving-both" or args.type == "4":
     print "\nPerforming both moving-vertical and moving-horizontal slitscans, without having to reload everything."
-    test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, True, True)
-
+    out_path = slit_scanner.moving_slitscan_both(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format, do_height=True, do_width=True)
 
 elif args.type == "low-mem" or args.type == "5":
-    print "\nLow-memory version. Very slow, but RAM-efficient."
-    test_dir = slit_scanner.make_a_glob(args.input_dir)
-    slit_scanner.lowmem_moving_slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+    print "\nLow-memory version. Very very very very slow, but RAM-efficient."
+    out_path = slit_scanner.lowmem_moving_slitscan(test_dir, args.output_dir, args.slit_size, args.frame_limit, args.output_format)
+
+# make a video of results
+if args.video and out_path is not None:
+    print out_path
+    if args.type == "2":
+        out_path += "height/"
+        slit_scanner.make_a_video(out_path, args.output_format, "height.mp4")
+    elif args.type == "3":
+        out_path += "width/"
+        slit_scanner.make_a_video(out_path, args.output_format, "width.mp4")
+    elif args.type == "4":
+        out_path_width = out_path + "width/"
+        slit_scanner.make_a_video(out_path_width, args.output_format, "width.mp4")
+        out_path_height = out_path + "height/"
+        slit_scanner.make_a_video(out_path_height, args.output_format, "height.mp4")
+    elif args.type == "5":
+        slit_scanner.make_a_video(out_path, args.output_format, "slitscan.mp4")

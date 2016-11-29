@@ -9,7 +9,7 @@ def video_to_tif(vid_path):
     if vid_path == None:
         vid_path = '/Volumes/Ramjet2/slit_scan/results/MVI_0001.mov'
     new_clip = VideoFileClip('vid_path')
-    new_clip.write_images_sequence("/Volumes/Ramjet2/slit_scan/results/mvi_0001/frame%03d.tif")
+    new_clip.write_images_sequence("/Volumes/Ramjet2/slit_scan/results/mvi_0001/frame%06d.tif")
 
     return
 
