@@ -1,0 +1,2 @@
+numpy==1.16.4
+Pillow-SIMD==5.3.0.post1

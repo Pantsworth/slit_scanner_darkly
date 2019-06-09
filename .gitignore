@@ -1,12 +1,8 @@
 
-.idea/misc.xml
-
-.idea/modules.xml
-
-.idea/slit_scanner_darkly.iml
-
-.idea/vcs.xml
-
-.idea/workspace.xml
+.idea
 
 slit_scanner.pyc
+
+venv
+
+.DS_Store

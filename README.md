@@ -3,9 +3,15 @@ Slit scanning. From frames to weird final product.
 
 This is a repository that allows for creating several types of slitscans (examples available further down the page).
 
-**Dependencies:**
-[PIL] (http://www.pythonware.com/products/pil/)
-[Numpy] (http://www.numpy.org/)
+**Setup:**
+0. Install [ffmpeg](https://ffmpeg.org/) and [Python 3](https://realpython.com/installing-python/)
+1. clone this repo
+2. `cd slit_scanner_darkly`
+3. `mkdir venv`
+4. `python3 -m venv venv/`
+5. `source venv/bin/activate`
+6. `pip install -r requirements.txt`
+
 
 **Single Slitscans:**
 Single slitscans come in two flavors: horizontal and vertical. This style of slitscan is inspired by [Adam Magyar's Urban Flow project] (http://www.magyaradam.com/).

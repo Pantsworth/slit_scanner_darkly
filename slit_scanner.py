@@ -1,9 +1,13 @@
-import numpy, os, glob
-import sys
+import glob
+import numpy
+import os
 import random
+import subprocess
+import sys
+
+from multiprocessing import Process, Pool
 from PIL import Image
 from timeit import default_timer as timer
-from multiprocessing import Process, Pool
 
 
 def make_a_glob(root_dir):
@@ -31,8 +35,8 @@ def make_a_glob(root_dir):
         else:
             break
 
-    print "First image is: " + dir_glob[0]
-    print "Number of frames found: ", len(dir_glob)
+    print("First image is: " + dir_glob[0])
+    print("Number of frames found: ", len(dir_glob))
     return dir_glob
 
 
@@ -46,9 +50,9 @@ def get_frame_limit(limit_frames, globsize):
     if limit_frames != -1:
         if globsize > limit_frames:
             total_frames = limit_frames
-            print "Frames limited to ", limit_frames
+            print("Frames limited to ", limit_frames)
         else:
-            print "Frame limit of", limit_frames, "is higher than total # of frames: ", globsize
+            print("Frame limit of", limit_frames, "is higher than total # of frames: ", globsize)
             total_frames = globsize
     else:
         total_frames = globsize
@@ -56,32 +60,32 @@ def get_frame_limit(limit_frames, globsize):
     return total_frames
 
 
-def get_slit_fixes_height(slit_size, height, width):
+def get_slit_fixes_height(slit_size, height):
     current_slit = 0
     if slit_size > height:
-        print "Slit size exceeds height, using height"
+        print("Slit size exceeds height, using height")
         current_slit = height
     if slit_size < 1:
-        print "Slit size must be greater than 1. Slit size set to 1."
+        print("Slit size must be greater than 1. Slit size set to 1.")
         current_slit = 1
     if height != slit_size:
-        print "Height != slit size. Will slice from center..."
+        print("Height != slit size. Will slice from center...")
         current_slit = slit_size
     else:
         current_slit = slit_size
     return current_slit
 
 
-def get_slit_fixes_width(slit_size, height, width):
+def get_slit_fixes_width(slit_size, width):
     current_slit = 0
     if slit_size > width:
-        print "Slit size exceeds width, using width"
+        print("Slit size exceeds width, using width")
         current_slit = width
     if slit_size < 1:
-        print "Slit size must be greater than 1. Slit size set to 1."
+        print("Slit size must be greater than 1. Slit size set to 1.")
         current_slit = 1
     if width != slit_size:
-        print "width != slit size. Will slice from center..."
+        print("width != slit size. Will slice from center...")
         current_slit = slit_size
     else:
         current_slit = slit_size
@@ -112,14 +116,14 @@ def make_output_dir(output_dir):
 
     os.mkdir(output_path + "slitscan" + str(slitscan_current) + "/")
     frame_path = output_path + "slitscan" + str(slitscan_current) + "/"
-    print "Made directory: ", frame_path
+    print("Made directory: ", frame_path)
     return frame_path
 
 
 def do_sizing(dir_glob):
     first = Image.open(dir_glob[0])
     width, height = first.size
-    print "width is: ", width," height is: ", height
+    print("width is: ", width," height is: ", height)
     return width, height
 
 
@@ -156,14 +160,14 @@ def save_single(final_array_in, frame_path, output_format):
         current_slitscan += 1
     frame_path = frame_path + "single_slitscan" + str(current_slitscan) + "." + output_format
     img.save(frame_path, format=output_format)
-    print "saved result as ", frame_path
+    print("saved result as ", frame_path)
     print('\a')
     return img
 
 
 def slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, do_height=False, do_width=False):
-    """
-    standard slitscanning functionality.
+    """ Standard slitscanning functionality.
+
     :param dir_glob: directory for images
     :param output_dir: directory for output
     :param slit_size: size of slit to use for scanning
@@ -188,7 +192,6 @@ def slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, do_he
 
     width, height = do_sizing(dir_glob)
 
-
     # LIMIT NUMBER OF FRAMES
     total_frames = get_frame_limit(limit_frames, len(dir_glob))
 
@@ -204,14 +207,14 @@ def slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, do_he
     #     progress(frame_number, total_frames)
 
     if not do_height and not do_width:
-        print "do_height and do_width are both False. do_height set to True."
+        print("do_height and do_width are both False. do_height set to True.")
         do_height = True
 
     if do_height:
         slit_size = get_slit_fixes_height(slit_size, height, width)
         final_array = numpy.zeros((slit_size*total_frames, width, 3), numpy.uint8)
         # **********************    make the final image   **********************
-        for frame_number in xrange(total_frames):
+        for frame_number in range(total_frames):
             next_im = Image.open(dir_glob[frame_number])
             next_array = numpy.array(next_im, numpy.uint8)  # open and read image
             frame_array = next_array
@@ -237,7 +240,7 @@ def slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, do_he
         final_array = numpy.zeros((height, slit_size * total_frames, 3), numpy.uint8)
 
         # **********************    make the final image   **********************
-        for frame_number in xrange(total_frames):
+        for frame_number in range(total_frames):
             next_im = Image.open(dir_glob[frame_number])
             next_array = numpy.array(next_im, numpy.uint8)  # open and read image
             frame_array = next_array
@@ -260,8 +263,7 @@ def slitscan(dir_glob, output_dir, slit_size, limit_frames, output_format, do_he
 
 
 def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_format, do_height=False, do_width=False):
-    """
-    makes moving slitscans for height, width or both!
+    """ Makes moving slitscans for height, width or both!
 
     :param dir_glob: directory for images
     :param output_dir: output directory
@@ -317,9 +319,9 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
 
     # *******************  make a master array with all our data *****************
     whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
-    print "Creating master array....", total_frames, height, width, 3
+    print("Creating master array....", total_frames, height, width, 3)
 
-    for frame_number in xrange(total_frames):
+    for frame_number in range(total_frames):
         next_im = Image.open(dir_glob[frame_number])
         next_array = numpy.array(next_im, numpy.uint8)
         del next_im
@@ -327,18 +329,18 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
         del next_array
         progress(frame_number, total_frames)
 
-    print "\nCreating images..."
+    print("\nCreating images...")
 
     if not do_height and not do_width:
-        print "Neither height nor width selected. Doing moving height slitscan anyway."
+        print("Neither height nor width selected. Doing moving height slitscan anyway.")
         do_height = True
 
     if output_format.upper() not in "TIFF, JPEG, PNG":
-        print "No such output format. Defaulting to JPEG"
+        print("No such output format. Defaulting to JPEG")
         output_format = "JPEG"
 
     if do_height:
-        print "\nheight/slitsize is: ", height / slit_size
+        print("\nheight/slitsize is: ", height / slit_size)
         slit_size = get_slit_fixes_height(slit_size, height, width)
         os.mkdir(frame_path + "height/")
         for slit_position in range(height/slit_size):
@@ -372,8 +374,7 @@ def moving_slitscan_both(dir_glob, output_dir, slit_size, limit_frames, output_f
 
 
 def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, framesmash_width, framesmash_height):
-    """
-    smash the frames into random slices appearing at random intervals.
+    """ Smash the frames into random slices appearing at random intervals.
 
     :param dir_glob: directory for images
     :param output_dir: output directory
@@ -390,7 +391,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
     rect_high = 300
 
     # if not framesmash_width and not framesmash_height:
-    #     print "Both framesmash_width and framesmash_height are False. Defaulting to framesmash_width"
+    #     print("Both framesmash_width and framesmash_height are False. Defaulting to framesmash_width"
     #     framesmash_width = 1
 
     framesmash_both = 0
@@ -400,7 +401,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
     # **************************** SIZING *******************************************************
     first = Image.open(dir_glob[0])
     width, height = first.size
-    print "Image width is: ", width, " height is: ", height
+    print("Image width is: ", width, " height is: ", height)
 
     # **************************** FRAMESMASHER - width *******************************************************
     if framesmash_width:
@@ -413,7 +414,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
             dividing_line += rand_val
             if dividing_line > height:
                 dividing_list_width[len(dividing_list_width)-1] -= (dividing_line-height)
-        print "Dividing list-width: ", dividing_list_width
+        print("Dividing list-width: ", dividing_list_width)
 
     # **************************** FRAMESMASHER - HEIGHT *******************************************************
     if framesmash_height:
@@ -426,7 +427,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
             dividing_line += rand_val
             if dividing_line > width:
                 dividing_list_height[len(dividing_list_height) - 1] -= (dividing_line - width)
-        print "Dividing list-height: ", dividing_list_height
+        print("Dividing list-height: ", dividing_list_height)
 
         # **************************** FRAMESMASHER - RANDOM *******************************************************
     if framesmash_irregular or framesmash_space:
@@ -439,7 +440,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
             dividing_line += rand_val
             if dividing_line > height:
                 dividing_list_width[len(dividing_list_width)-1] -= (dividing_line-height)
-        print "Dividing list-width: ", dividing_list_width
+        print("Dividing list-width: ", dividing_list_width)
 
     # ******************************** LIMIT NUMBER OF FRAMES ********************************
     total_frames = get_frame_limit(limit_frames, len(dir_glob))
@@ -447,22 +448,22 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
     # if limit_frames != -1:
     #     if len(dir_glob) > limit_frames:
     #         total_frames = limit_frames
-    #         print "Frames limited to ", limit_frames
+    #         print("Frames limited to ", limit_frames
     #     else:
-    #         print "Frame limit of", limit_frames,"is higher than total # of frames: ", len(dir_glob)
+    #         print("Frame limit of", limit_frames,"is higher than total # of frames: ", len(dir_glob)
     #         total_frames = len(dir_glob)
     # else:
     #     total_frames = len(dir_glob)
 
     max_frame_offset = total_frames
-    print "Max frame offset is: ", max_frame_offset
+    print("Max frame offset is: ", max_frame_offset)
 
     # *******************  MAKE MASTER ARRAY *****************
     whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
-    print "Creating master array....", total_frames, height, width, 3
-    print "\n"
+    print("Creating master array....", total_frames, height, width, 3)
+    print("\n")
 
-    for frame_number in xrange(total_frames):
+    for frame_number in range(total_frames):
         next_im = Image.open(dir_glob[frame_number])
         next_array = numpy.array(next_im, numpy.uint8)
         del next_im
@@ -473,8 +474,8 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
     if framesmash_width and framesmash_height:
         whole_array2 = whole_array
     # ******************************** MAKE FINAL IMAGES ********************************
-    # print "Final frame array is size: ", final_frames
-    print "Creating final images..."
+    # print("Final frame array is size: ", final_frames
+    print("Creating final images...")
 
     if framesmash_width:
         width_whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
@@ -487,7 +488,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
 
         for frame in range(total_frames):
             img = width_whole_array[frame]
-            # print "IMG dimensions: ", img
+            # print("IMG dimensions: ", img
             final_img = Image.fromarray(img, 'RGB')
             frame_name = frame_path + "width/" + str(frame) + "." + output_format
             final_img.save(frame_name, format=output_format)
@@ -504,7 +505,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
 
         for frame in range(total_frames):
             img = whole_array2[frame]
-            # print "IMG dimensions: ", img
+            # print("IMG dimensions: ", img
             final_img = Image.fromarray(img, 'RGB')
             frame_name = frame_path + "height/" + str(frame) + "." + output_format
             final_img.save(frame_name, format=output_format)
@@ -520,7 +521,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
 
         for frame in range(total_frames):
             img = whole_array2[frame]
-            # print "IMG dimensions: ", img
+            # print("IMG dimensions: ", img
             final_img = Image.fromarray(img, 'RGB')
             frame_name = frame_path + "height/" + str(frame) + "." + output_format
             final_img.save(frame_name, format=output_format)
@@ -538,17 +539,17 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
         for marker in dividing_list_width:
             for value in range(len(slots)-1):
                 if marker == slots[value] and slots_taken[value] == 0:
-                    print dividing_list_width, "\n", slots_taken, "\n", slots
+                    print(dividing_list_width, "\n", slots_taken, "\n", slots)
                     slots_taken[value] = 1
                     marker_total = sum(slots[0:value])
                     if marker_total == 0:
-                        print marker_total
+                        print(marker_total)
                     space_whole_array[:, marker_total:marker_total + marker, :, :] = whole_array[:, marker_orig_total:marker_orig_total + marker, :, :]
                     marker_orig_total += marker
 
         for frame in range(total_frames):
             img = space_whole_array[frame]
-            # print "IMG dimensions: ", img
+            # print("IMG dimensions: ", img
             final_img = Image.fromarray(img, 'RGB')
             frame_name = frame_path + str(frame) + "." + output_format
             final_img.save(frame_name, format=output_format)
@@ -572,7 +573,7 @@ def frame_smasher(dir_glob, output_dir, slit_size, limit_frames, output_format, 
 
         for frame in range(total_frames):
             img = whole_array[frame]
-            # print "IMG dimensions: ", img
+            # print("IMG dimensions: ", img
             final_img = Image.fromarray(img, 'RGB')
             frame_name = frame_path + "height/" + str(frame) + "." + output_format
             final_img.save(frame_name, format=output_format)
@@ -618,7 +619,7 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
     total_frames = get_frame_limit(limit_frames, len(dir_glob))
 
     # ***** future code for adding slitscan_array to memory considerations
-    # print "Making final slitscan frames..."
+    # print("Making final slitscan frames..."
     # final_image_size = numpy.zeros(((slit_size * total_frames), width, 3), numpy.uint8)
     # slitscan_bytes = final_image_size.nbytes
     # slitscan_frames = ram_limit / slitscan_bytes
@@ -650,7 +651,7 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
         ram_frames = total_frames
 
     while remaining_frames != 0:
-        print "Ram frames: %s, Remaining Frames: %s, Frame offset: %s" % (ram_frames, remaining_frames, frame_offset)
+        print("Ram frames: %s, Remaining Frames: %s, Frame offset: %s" % (ram_frames, remaining_frames, frame_offset))
 
         for video_frame in range(ram_frames):
             next_array = numpy.array(Image.open(dir_glob[video_frame + frame_offset]), numpy.uint8)
@@ -671,7 +672,7 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
         frame_offset += ram_frames
         remaining_frames -= ram_frames
 
-    # print "Making final slitscan frames..."
+    # print("Making final slitscan frames..."
     # final_image_size = numpy.zeros(((slit_size * total_frames), width, 3), numpy.uint8)
     # for slit_position in range(height/slit_size):
     #     img = Image.fromarray(final_image_size, 'RGB')
@@ -679,22 +680,22 @@ def lowmem_moving_slitscan(dir_glob, output_dir, slit_size, limit_frames, output
     #     # img = img.rotate(-90, expand=1)
     #     img.save(frame_name, format=output_format)
     #
-    # print "\nheight/slitsize is: ", height/slit_size
-    # print "Creating images..."
+    # print("\nheight/slitsize is: ", height/slit_size
+    # print("Creating images..."
     #
     # for frame_number in xrange(total_frames):
     #     next_im = Image.open(dir_glob[frame_number])
     #     next_array = numpy.array(next_im, numpy.uint8)
     #
     #     for slit_position in range(height/slit_size):
-    #         print slit_position
+    #         print(slit_position
     #         # open final slitscan frame
     #         frame_name = frame_path + str(slit_position) + "." + output_format
     #         slit_image = Image.open(frame_name)
     #         slit_array = numpy.array(slit_image)
     #         # split the video frame
     #         split_result = next_array[(slit_position*slit_size):(slit_position*slit_size)+slit_size, :, :]
-    #         print "split result: ", split_result.shape
+    #         print("split result: ", split_result.shape
     #
     #         slit_array[(frame_number*slit_size):(frame_number*slit_size)+slit_size, :, :] = split_result
     #         # save slitscan frame
@@ -718,9 +719,9 @@ def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
 
     # *******************  make a master array with all our data *****************
     whole_array = numpy.zeros((total_frames, height, width, 3), numpy.uint8)
-    print "Creating master array....", total_frames, height, width, 3
+    print("Creating master array....", total_frames, height, width, 3)
 
-    for frame_number in xrange(total_frames):
+    for frame_number in range(total_frames):
         next_im = Image.open(dir_glob[frame_number])
         next_array = numpy.array(next_im, numpy.uint8)
         del next_im
@@ -735,7 +736,7 @@ def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
     #     whole_array[:, current_step:current_step+step, :, :] = numpy.roll(whole_array[:, current_step:current_step+step, :, :], current_time, axis=0)
     #     current_step += step
     #     current_time -= 1
-    #     print current_step, current_time
+    #     print(current_step, current_time
 
 
     # for line in range(height/step):
@@ -745,7 +746,7 @@ def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
     #         current_time -= 1
     #     else:
     #         current_time +=1
-    #     print current_step, current_time
+    #     print(current_step, current_time
 
     # step = width/255
     # for line in range(width):
@@ -755,7 +756,7 @@ def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
     #         current_time -=1
     #     else:
     #         current_time +=1
-    #     print current_step, current_time
+    #     print(current_step, current_time
 
     # CIRCULAR SLITSCAN
     center = [height/2, width/2]
@@ -767,7 +768,7 @@ def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
 
     for frame in range(total_frames):
         img = whole_array[frame]
-        # print "IMG dimensions: ", img
+        # print("IMG dimensions: ", img
         final_img = Image.fromarray(img, 'RGB')
         frame_name = frame_path + str(frame) + "." + output_format
         final_img.save(frame_name, format=output_format)
@@ -777,7 +778,8 @@ def conventional_slitscan(dir_glob, output_dir, limit_frames, output_format):
 def make_a_video(output_dir, output_format, name):
     if not output_dir.endswith("/"):
         output_dir += "/"
-    os.system('ffmpeg -r 24 -i ' + output_dir + '%d.' + output_format + ' -c:v libx264 ' + output_dir + name)
-    #   ffmpeg finishing
-    #   ffmpeg -framerate 24 -i %d.JPEG -c:v libx264  out7.mp4
-    #   ffmpeg -framerate 24 -i %d.JPEG -c:v libx264 -s 1920x1200 out7.mp4
+
+    try:
+        subprocess.Popen('ffmpeg -r 24 -i ' + output_dir + '%d.' + output_format + ' -c:v libx264 ' + output_dir + name)
+    except OSError as e:
+        print("Error processing frames to video. Please ensure you have ffmpeg installed.")
