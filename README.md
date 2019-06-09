@@ -39,11 +39,11 @@ Flags | Help
 
 
 # Examples:
-Github doesn't let me embed YouTube vids... lame.
+Github doesn't let me embed YouTube vids... lame. I put a few gifs in, but for full examples see the videos.
 ### Original Footage:
 Train Station:
 
-[![Chicago Train Footage](https://img.youtube.com/vi/t-guLsCS_pg/0.jpg)](https://www.youtube.com/watch?v=t-guLsCS_pg)
+[![Chicago Train Footage](img/train_720.gif)](https://www.youtube.com/watch?v=t-guLsCS_pg)
 
 https://www.youtube.com/watch?v=t-guLsCS_pg
 
@@ -82,7 +82,7 @@ Bridge:
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 2`
 Train Station:
 
-[![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/Mm9q6qhgt7Y/0.jpg)](https://www.youtube.com/watch?v=Mm9q6qhgt7Y)
+[![Chicago Train Footage - Slitscan Width](img/train_height_720.gif)](https://www.youtube.com/watch?v=Mm9q6qhgt7Y)
 
 https://www.youtube.com/watch?v=Mm9q6qhgt7Y
 
@@ -95,7 +95,7 @@ https://www.youtube.com/watch?v=e5PUNPEcwTI
 ### Moving Slitscan (width)
 `cli.py -i <input_dir - set of video frames> -o <output_dir> -slit 5 -t 3`
 
-[![Chicago Train Footage - Slitscan Width](https://img.youtube.com/vi/UCeJmNJHFNI/0.jpg)](https://www.youtube.com/watch?v=UCeJmNJHFNI)
+[![Chicago Train Footage - Slitscan Width](img/train_width_720.gif)](https://www.youtube.com/watch?v=UCeJmNJHFNI)
 
 https://www.youtube.com/watch?v=UCeJmNJHFNI
 
