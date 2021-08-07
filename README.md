@@ -1,9 +1,13 @@
 # slit_scanner_darkly
 Slit scanning. From frames to weird final product.
 
+[![Chicago Train Footage - Slitscan Width](img/train_width_720.gif)](https://www.youtube.com/watch?v=UCeJmNJHFNI)
+
+
 This is a repository that allows for creating several types of slitscans (examples available further down the page).
 
 **Setup:**
+
 0. Install [ffmpeg](https://ffmpeg.org/) and [Python 3](https://realpython.com/installing-python/)
 1. clone this repo
 2. `cd slit_scanner_darkly`
@@ -14,7 +18,7 @@ This is a repository that allows for creating several types of slitscans (exampl
 
 
 **Single Slitscans:**
-Single slitscans come in two flavors: horizontal and vertical. This style of slitscan is inspired by [Adam Magyar's Urban Flow project] (http://www.magyaradam.com/).
+Single slitscans come in two flavors: horizontal and vertical. This style of slitscan is inspired by [Adam Magyar's Urban Flow project](http://www.magyaradam.com/).
 
 **Moving Slitscans:**
 Like the single slitscans (horizontal and vertical), but compiled over ~all~ the images in a sequence. Each new frame
